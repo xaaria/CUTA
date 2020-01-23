@@ -13,15 +13,14 @@ int main(int argc, char *argv[])
 {
   int kork = atoi(argv[1]);
   int lev = atoi(argv[2]);
-  int **t2d = malloc(kork*sizeof(int *));
+  int** t2d = malloc(kork*sizeof(int *));
   int i = 0, j = 0;
   int max1 = INT_MIN, max2 = INT_MIN;
   srand(time(NULL));
   for(i = 0; i < kork; ++i)
   {
     t2d[i] = malloc(lev*sizeof(int));
-    for(j = 0; j < lev; ++j)
-    {
+    for(j = 0; j < lev; ++j) {
       t2d[i][j] = rand();
       max1 = (max1 < t2d[i][j]) ? t2d[i][j] : max1;
     }
