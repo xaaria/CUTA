@@ -16,8 +16,6 @@
   Funktion kutsujan vastuulle jää vapauttaa palautettu merkkijono, kun sitä ei enää tarvita.
 
 
-  KESKEN: Merkkijonon kopiointi falskaa. Lopetusmerkki & strcpy?
-
 */
 
 char* lueKunnes(FILE* virta, char erotin, size_t* pituus) {
@@ -29,7 +27,7 @@ char* lueKunnes(FILE* virta, char erotin, size_t* pituus) {
   int lue = 1; /* bool. */
   *pituus = 0; /* pitää nollata! */
   
-  while(lue == 1) {
+  do {
 
     c = getc(virta);
 
@@ -43,67 +41,48 @@ char* lueKunnes(FILE* virta, char erotin, size_t* pituus) {
       if(pit == kap) {
         /*printf("\tTILA LOPPUI\n");
         */
-        int i = 0;
-        char* temp = puskuri; /* ota väliaikaiseen muuttujaan talteen osoite puskurin alkuun */
-
         kap *= 2; /* tuplaa kapas. */
-        puskuri = (char*) calloc( kap, sizeof(char) ); /* voitaisiin myös tarkastaa että saatiin uusi osoite, mutta jääköön väliin */
-        /*
-        */
-        /* ota väliaikamuistista sisältö uuteen, tilavampaan char-taulukkoon */
-        for(i=0; i<pit; i++) {
-          /*printf("\tCOPY %c [%d]\n", (char) temp[i], i);
-          */
-          puskuri[i] = temp[i];
-        }
-
+        puskuri = (char*) realloc( puskuri, kap*sizeof(char) ); /* voitaisiin myös tarkastaa että saatiin uusi osoite, mutta jääköön väliin */
       }
 
-      /* Tallenna merkki normaalisti */
+      /* Tallenna merkki normaalisti, indeksiin jonka arvo on 'montako ennestään tallennettu'. Huomaa nollakantaisuus! */
       puskuri[pit] = (char) c;
       /*printf("Tallennettiin '%c' indeksiin [%d]\n", (char) c, pit);
       */
       pit++;
-      *pituus = pit;
+      /* turha: *pituus = pit; */
 
     } else {
       lue = 0; /* Aseta lippumuuttuja epätodeksi, ei enää jatketa lukemista */
-      break;
     }
 
-  } /* while */
+  } while(lue==1); /* while */
 
 
-  /*printf("TILANNE: pit %d ja merkki %c", pit, (char) c);
-    */
+  /*printf("TILANNE: pit %d ja merkki %d\n", pit, c );
+  */
 
   /* 
     lukemisen jälkeen: Jos pit > 0 tai kohdattiin merkki erotin, uudelleenvaraa puskuri-merkkijono (pit + 1)-tavuiseksi 
     ja aseta viimeisen siihen talletetun merkin perään lopetusmerkki '\0'. */
 
-  if(pit > 0 || (char) c == EOF) {
+  if(pit > 0 || (char) c == erotin) {
     
-    size_t i = 0;
-    char* mj = (char*) calloc( pit+1, sizeof(char) ); /* varaa tilaa lopulliselle palautettavalle mj:lle, ja +1 lopetusmerkille */
+    puskuri = (char*) realloc(puskuri, (pit+1)*sizeof(char) ); /* varaa tilaa lopulliselle palautettavalle mj:lle, ja +1 lopetusmerkille */
+    puskuri[pit] = (char) '\0';
+    *pituus = pit;
 
-    /* kopioi sisältö. Lopuksi laita lopetusmerkki */
-    for(i=0; i<pit; i++) {
-      mj[i] = puskuri[i];
-    }
-    mj[pit + 1] = '\0';
-
-    return mj;
+    return puskuri;
   }
-  else if(pit == 0 && (char) c == EOF) {
+
+  if(pit == 0 && c == EOF) {
     /*printf("pit==0 ja EOF\n");
     */
-    puskuri = (char*) calloc(0, sizeof(char));
+    puskuri = (char*) realloc(puskuri, 0);
     *pituus = 0;
     return puskuri;
-  } 
+  }
 
-  /*  */
-  *pituus = 0;
   return NULL;
 
 }
