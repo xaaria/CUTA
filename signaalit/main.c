@@ -19,20 +19,21 @@
 
 */
 
-/* lukee käyttäjän syötteen, tallentaa sen taulukkoon str. Syötettä luetaan max. 255 merkkiä */
-
+int DEBUG = 0;
 
 int main(int argc, char* argv[]) {
 
 
   int command = 0;
-  int* luvut = NULL; /* varaa sitä mukaan kun tilaa tarvitaan, aluksi koko=0 */ 
-  unsigned int luvut_lkm = 0;
+  unsigned int luvut_lkm  = 0;
+  unsigned int koko = 1;
+  int* luvut = (int*) calloc( koko, sizeof(int)  ); /* varaa sitä mukaan kun tilaa tarvitaan, aluksi koko=1 (!) */ 
+  
 
   /* parametrit */
   int a, b;
   unsigned int c;
-  char cmd2[50];
+  char cmd2[100];
 
   /* aseta poikkeustenjäsittelijäfunktiot. <signal.h> */
   signal(SIGFPE,  hoidaSIGFPE);
@@ -42,7 +43,7 @@ int main(int argc, char* argv[]) {
 
     char cmd[100];
 
-    if(fgets(cmd, 50, stdin) == NULL) {
+    if(fgets(cmd, 100, stdin) == NULL) {
       return 0; /* lopeta saman tien... */
     }
 
@@ -60,11 +61,13 @@ int main(int argc, char* argv[]) {
     }
     else if( sscanf(cmd, "%s", &cmd2) == 1 ) {
       command = 3;
-    } else {
+    } 
+    else {
       /* lopeta koko ohjelman suoritus */
-      return 0;
+      exit(0);
     }
 
+    fflush(stdin);
 
     /* 
       Jatka tästä jos komento on onnistuneesti luettu ja tulkittu.
@@ -81,8 +84,17 @@ int main(int argc, char* argv[]) {
           int arvo = 0;
 
           /* tarvitaanko lisää muistikapasiteettia? */
-          if( (sizeof(luvut) / sizeof(int)) >= luvut_lkm ) {
-            luvut = (int*) realloc( luvut, (luvut_lkm+1)*sizeof(int) );
+          
+          if(DEBUG==1) { printf("-- koko: %d, _lkm: %d --\n", koko, luvut_lkm ); }
+
+          /* jos koko on sama kuin kapasiteetti JA ei olla 1. lisäyksessä, niin kasvata tilaa */
+          if( luvut_lkm != 0 && koko == luvut_lkm ) {
+            
+            luvut = (int*) realloc( luvut, (koko++)*sizeof(*luvut) );
+            /*koko++;*/
+
+            if(luvut==NULL) { exit(0); }
+            if(DEBUG==1) { printf("tilaa on nyt %d:lle\n", koko ); }
           }
 
           /* lisää jakolaskun tulos taulukkoon */
@@ -90,6 +102,7 @@ int main(int argc, char* argv[]) {
           arvo = a/b;
           luvut[luvut_lkm] = arvo;
           luvut_lkm += 1;
+          if(DEBUG==1) { printf("lisattiin... koko: %d\n", luvut_lkm); }
         }
 
         else if(command==2) {
@@ -99,11 +112,12 @@ int main(int argc, char* argv[]) {
 
         else if(command == 3) {
           size_t i = 0;
-          size_t len = sizeof(luvut) / sizeof(int);
 
-          for(; i < len; i++) {
+          if(DEBUG==1) { printf("len %d\n", koko); }
+
+          for(; i < koko; i++) {
             printf("%d", luvut[i]);
-            if(i != len-1) {
+            if(i != koko-1) {
               printf(" "); /* lukujen väliin väli */
             }
           }
